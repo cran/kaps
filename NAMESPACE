@@ -1,0 +1,6 @@
+export(apss.control, count.mindat, kaps, km.curve, lrtree, lrtree.control, kapsNews)
+import(methods)
+import(graphics)
+## S4 class
+exportClasses(apss, Tree)
+exportMethods(print, show, plot, predict, summary, labels, text) 
