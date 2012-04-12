@@ -43,5 +43,17 @@ lrtree <- function(Formula, data, subset = NULL, weights = NULL, ...) {
 	result@where <- frameID$ID
     result@controls <- controls
     result@weights <- weights
-	return(result)
+
+		
+######################################
+#####   for all of the pruning 
+######################################
+
+    candidate.tree <- candidate.prune(result)
+    result@alpha <- candidate.tree$alpha
+ 	result@alpha.prime <- sqrt(cumprod(result@alpha))
+	result@alpha.prime[1] <- 0
+    result@frame$complexity <- as.numeric(0)
+    result@frame$complexity[pmatch(candidate.tree$node.change, result@frame$Node)]<- round(result@alpha,3)
+    return(result)
 }

@@ -43,19 +43,19 @@ data(toy)
 f <- Surv(time, status) ~ meta
 # Fit maps algorithm without cross validation.
 # It means the step to finding optimal K is not entered.
-fit1 <- kaps(f, data = toy, K = 2:5, fold = FALSE)
+#fit1 <- kaps(f, data = toy, K = 2:5, fold = FALSE)
 
 # show the object of kaps (it contains apss S4 class)
-fit1
+#fit1
 
 # summary of the object
-summary(fit1)
+#summary(fit1)
 # If you want show another summary statistic for arbitrary K
-summary(fit1, K = 2) # It executes summary function of kaps with the result of K = 2.
+#summary(fit1, K = 2) # It executes summary function of kaps with the result of K = 2.
 
 # plot Kaplan-Meire survival curves
-plot(fit1)
-plot(fit1,K=3) # for K =2
+#plot(fit1)
+#plot(fit1,K=3) # for K =2
 # To conduct cross-validation, use V argument without fold input.
 fit2 <- kaps(f, data = toy, V=5) # It conduct kaps with V-fold cross-validation when V=5.
 fit2
@@ -66,10 +66,10 @@ summary(fit2)
 summary(fit2,K=2)
 
 ## compare with other algorithms
-fit3 <- lrtree(f, data = toy, minbucket = 10)
-fit3
-par(mfrow = c(1,1))
-plot(fit3)
+#fit3 <- lrtree(f, data = toy, minbucket = 10)
+#fit3
+#par(mfrow = c(1,1))
+#plot(fit3)
 
 # require(party)
 # fit4 <- ctree(f, data = toy)

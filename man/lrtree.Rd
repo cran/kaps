@@ -32,7 +32,7 @@
 ## toy example
 data(toy)
 f <- Surv(time, status) ~ meta
-fit <- lrtree(f, data = toy, B = 20)
+fit <- lrtree(f, data = toy, eps = 1)
 ### Print lrtree object
 fit
 ### Print survival median time, 1 years, 3 years, and 5 years times. 
@@ -40,22 +40,20 @@ summary(fit)
 
 ### Plot tree diagram
 plot(fit) # type = "naive"
+#plot(fit, type = "km") # survival curves for terminal nodes
+
+### determination of the tree size by cost-complexity pruning (0SE)
+#fit1 <- prune(fit)
+#fit1
 
 ### Plot Kaplan-Meire survival curves for terminal nodes.
-km.curve(fit)
-
-#f <- Surv(time, status) ~ ratio
-#fit <- lrtree(f, data = toy, minbucket = 100, pre.pt = seq(0, 0.95, by = .05))
-#plot(fit, type = "naive") # type = "naive"
-### Print survival median time, i years, 3 years, and 5 years times by summary(). 
-#summary(fit)
-
-### Draw Kaplan-Meier survival curves
-#km.curve(fit)
-#legend(120,0.6, col=c(1:6)[fit.order],  lwd=2, 
-#		   c("Node 8  (0.00 <= Ratio <= 0.10)",
-#			 "Node 11 (0.45 <  Ratio <= 0.75)",
-#			 "Node 3  (0.75 <  Ratio <= 1.00)"),
+#km.curve(fit1)
+#legend(120,0.6, col=c(1:6),  lwd=2, 
+#		   c("Node 2  (0 <= # of meta lymphs < 1)",
+#			 "Node 3  (1 <= # of meta lymphs)"),
 #		   bty="n")
+
+# with Bootstrap stopping rule
+#fit1 <- lrtree(f, data = toy, B= 20)
 }
 \keyword{tree}

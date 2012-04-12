@@ -3,4 +3,4 @@ import(methods)
 import(graphics)
 ## S4 class
 exportClasses(apss, Tree)
-exportMethods(print, show, plot, predict, summary, labels, text) 
+exportMethods(print, show, plot, predict, summary, labels, text, prune) 

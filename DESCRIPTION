@@ -1,7 +1,7 @@
 Package: kaps
 Title: K Adaptive Partitioning for Survival data
-Version: 0.8.3
-Date: 2012-03-18
+Version: 0.9-2
+Date: 2012-04-12
 Author: Soo-Heang Eo and HyungJun Cho
 Maintainer: Soo-Heang Eo <hanansh@korea.ac.kr>
 Description: This package provides some routines to conduct the
@@ -11,13 +11,11 @@ Description: This package provides some routines to conduct the
         an implementation version of our algorithm kaps which provides
         minimax based partitioing rule by log-rank test. A fuction
         lrtree enables researchers to conduct log-rank survival tree
-        proposed by Segal (1988). In the near future, we have a plan to
-        add new recursive partitioning algorithm for survival data
-        called STUDI (Cho and Hong, 2008)
+        proposed by Segal (1988).
 License: GPL-2
 URL: http://statlab.korea.ac.kr/kaps
 Depends: R (>= 2.14.0), methods, survival, Formula, grid, parallel,
         locfit
-Packaged: 2012-03-20 08:48:34 UTC; hanansh
+Packaged: 2012-04-16 06:25:09 UTC; hanansh
 Repository: CRAN
-Date/Publication: 2012-03-20 09:14:25
+Date/Publication: 2012-04-16 07:20:02

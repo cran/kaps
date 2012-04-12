@@ -235,7 +235,7 @@ setMethod("labels","Tree", function(object, type = "diagram") {
 		names(rsplit) <- as.numeric(ff[whichrow, 1])  * 2 + 1
 	}
 	res <- c(res, lsplit, rsplit)
-	res <- res[pmatch(ff$Node,names(res))]
+	res <- res[pmatch(as.numeric(ff$Node),as.numeric(names(res)))]
 	return(res)
 	}
 )
@@ -280,7 +280,7 @@ setMethod("show", "apss", function(object){
 			test.stat[,-1],
 			pvalue = round(object@pvalue,3),
 			sig = format(Signif))
-		dimnames(test.stat) <- list(attr(object@groups,"names"), c("X2","Pr(>|x2|)","Chisq","df", "WH","t value","Pr(>|t|)", ""))
+		dimnames(test.stat) <- list(attr(object@groups,"names"), c("Z","Pr(>|Z|)","x2(s)","df", "WH","t value","Pr(>|t|)", ""))
 		print(test.stat)
 		cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
 		if(object@Options@fold){
@@ -300,7 +300,7 @@ setMethod("show", "apss", function(object){
 				Zp = round(1 - pchisq(q = object@elbow[2,],df=1),3),
 				cv.stat[,-1],
 				pvalue = cv.pvalue,sig = format(Signif))
-			dimnames(cv.stat) <- list(attr(object@groups,"names"), c("X2","Pr(>|x2|)","Chisq","df", "WH","t value","Pr(>|t|)", ""))
+			dimnames(cv.stat) <- list(attr(object@groups,"names"), c("Z","Pr(>|Z|)","x2(s)","df", "WH","t value","Pr(>|t|)", ""))
 			print(cv.stat)
 			cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
 
@@ -457,7 +457,7 @@ km.curve <- function(object,
 	object@data$where <- object@where 
 	f <- update(object@formula, . ~ where)
 	surv.all <- survfit(f, data = object@data)
-	id.n <- length(unique(object@data$where))
+	id.n <- length(unique(object@where))
 	plot(surv.all, col= 1:id.n, lty = 1:id.n, axes=FALSE, cex=1, lwd=1.5, ...)
 	mtext("Survival months", side=1, line=3, cex=1.2)
 	mtext("Survival probability", side=2, line=3, cex=1.2)
