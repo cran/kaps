@@ -57,7 +57,7 @@ f <- Surv(time, status) ~ meta
 #plot(fit1)
 #plot(fit1,K=3) # for K =2
 # To conduct cross-validation, use V argument without fold input.
-fit2 <- kaps(f, data = toy, V=5) # It conduct kaps with V-fold cross-validation when V=5.
+fit2 <- kaps(f, data = toy, K= 2:4, V=5) # It conduct kaps with V-fold cross-validation when V=5.
 fit2
 
 plot(fit2)

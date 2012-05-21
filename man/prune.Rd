@@ -8,7 +8,7 @@
 	cost = function(y, yhat, status) sum(abs(y - yhat) * status))
 }
 \description{
-This function conduct a cost-complexity pruning in order to obtain ideal tree size. 
+This function conducts a cost-complexity pruning in order to obtain ideal size of the tree. 
 }
 \arguments{
   \item{treeres}{object of S4 class \code{Tree}.}

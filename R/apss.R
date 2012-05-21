@@ -44,6 +44,7 @@ apss <- function(formula, data, K = 3, mindat = floor(nrow(data) * 0.01), minors
 	
 	result@Chisq <- 0
 	pt.set <- lapply(pt.set, function(x,upper, lower) x[x <= upper & x >= lower], upper = minors@upper.limit, lower = minors@lower.limit)
+	
 	v <- K-1
 	for(i in 1: length(pt.set)){
 		if(!is.null(attr(scope, "names"))){

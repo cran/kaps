@@ -19,10 +19,10 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 	## CHECKME: modify by parallel computing
 	### parallel computing in order to find optimal k subgroups
 	if(minors@ncl ==1){
-		cat("Now, running kaps algorithm for your data\n")
+		cat("Now, selecting a set of cut-off points...\n")
 		aps <- lapply(K, apss, formula = formula, data = data, mindat= mindat, minors = minors)
 		if(minors@fold){
-			cat("Now, finding optimal K. \nPlease, wait...\n")
+			cat("Now, finding an optimal K...\n")
 			elbow.stat <- K.apss(K, V, formula, data, mindat, minors )
 		}
 	}
@@ -41,11 +41,16 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 	## Do permutation test
 	# Declare Group k as the number of terminal nodes if k is maximum among WH statistic.
 	test.stat <- sapply(aps, adj.test)
-
 	if(minors@fold ){
 		if(length(K) > 1) {
 			test.tmp <- elbow.stat[,elbow.stat[2,] >= 3.8, drop = FALSE]
-			if( ncol(test.tmp) >= 0) index <- which(test.tmp[4,] == max(test.tmp[4,]))
+			if( ncol(test.tmp) >= 0) {
+				pvalue <- round(1 - pnorm(q = test.tmp[4,]),4)
+				zvalue <- round(1 - pchisq(q = test.tmp[2,],df=1),4)
+				value.std <- (pvalue + zvalue) / 2
+				index <- which(value.std == min(value.std))
+				if(length(index) >= 2) index <- index[length(index)]
+			}
 			else index <- 1
 		}
 		else index <- 1
@@ -53,7 +58,13 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 	else{
 		if(length(K) > 1) {
 			test.tmp <- test.stat[,test.stat[2,] >= 3.8, drop = FALSE]
-			if( ncol(test.tmp) >= 1) index <- which(test.tmp[4,] == max(test.tmp[4,]))
+			if( ncol(test.tmp) >= 1){
+				pvalue <- round(1 - pnorm(q = test.tmp[4,]),4)
+				zvalue <- round(1 - pchisq(q = test.tmp[2,],df=1),4)
+				value.std <- (pvalue + zvalue) / 2
+				index <- which(value.std == min(value.std))
+				if(length(index) >= 2) index <- index[length(index)]
+			}
 			else index <- 1
 		}
 		else index <- 1

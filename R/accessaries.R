@@ -256,7 +256,7 @@ setMethod("show", "apss", function(object){
 	print(object@call)
 	cat("\n")
 	cat("	      K-Adaptive Partitioning for Survival Data\n\n")
-	cat(" Sample: ", nrow(object@data), "\n")
+	cat("Sample: ", nrow(object@data), "\n")
 	
 	pts <- round(object@split.pt,2)
 	cutpoint <- matrix(object@split.pt, nrow = 1, ncol = length(pts))
@@ -265,52 +265,50 @@ setMethod("show", "apss", function(object){
 	Signif <- symnum(object@pvalue, corr = FALSE, na = FALSE, 
                   cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                   symbols = c("***", "**", "*", ".", " "))
-
+	spt <- lapply(object@candid, function(x) x@split.pt)
+	spt <- sapply(spt, function(x) paste(x, collapse = ", "))
+		
 	cat("\n")
 	if(length(object@groups) >= 2){
-		test.stat <- data.frame(
-			Z = object@Z,
-			X2 = object@Chisq,
-			df = as.integer(object@groups) - 1,
-			WH = object@WH,
-			t = object@t)
-		test.stat<-	zapsmall(test.stat,digits = 3)
-		test.stat <- cbind(Z = test.stat$Z, 
-			Zp = round(1 - pchisq(q = object@Z,df=1),3),
-			test.stat[,-1],
-			pvalue = round(object@pvalue,3),
+		cat("\nSelecting a set of cut-off points:\n")
+		Signif <- symnum(object@pvalue, corr = FALSE, na = FALSE, 
+                  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                  symbols = c("***", "**", "*", ".", " "))
+		test.stat<-	zapsmall(object@Chisq,digits = 3)
+		test.stat <- data.frame(test.stat,
+			df = 1,
+			pvalue = round(object@pvalue,4),
+			pts = spt,
 			sig = format(Signif))
-		dimnames(test.stat) <- list(attr(object@groups,"names"), c("Z","Pr(>|Z|)","x2(s)","df", "WH","t value","Pr(>|t|)", ""))
+		dimnames(test.stat) <- list(attr(object@groups,"names"), c("X^2", "df", "Pr(>|X^2|)","cut-off points",  ""))
 		print(test.stat)
 		cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
 		if(object@Options@fold){
-			cat("\n By Cross-Validation\n")
-			cv.pvalue <- round(1 - pnorm(q = object@elbow[4,]),3)
-			Signif <- symnum(cv.pvalue, corr = FALSE, na = FALSE, 
+			cat("\nFinding an optimal K:\n")
+			cv.pvalue <- round(1 - pnorm(q = object@elbow[4,]),4)
+			cv.zvalue <- round(1 - pchisq(q = object@elbow[2,],df=1),4)
+			Signif <- symnum( (cv.pvalue+cv.zvalue)/2, corr = FALSE, na = FALSE, 
 			  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
 			  symbols = c("***", "**", "*", ".", " "))
 			cv.stat <- data.frame(
 				Z = object@elbow[2,],
-				X2 = object@elbow[1,],
 				df = as.integer(object@groups) - 1,
-				WH = object@elbow[3,],
 				t = object@elbow[4,])
 			cv.stat<- zapsmall(cv.stat,digits = 3)
-			cv.stat <- cbind(cv.stat[,1], 
-				Zp = round(1 - pchisq(q = object@elbow[2,],df=1),3),
-				cv.stat[,-1],
+			cv.stat <- cbind(cv.stat[,1:2], 
+				Zp = cv.zvalue,
+				cv.stat[,-c(1,2)],
 				pvalue = cv.pvalue,sig = format(Signif))
-			dimnames(cv.stat) <- list(attr(object@groups,"names"), c("Z","Pr(>|Z|)","x2(s)","df", "WH","t value","Pr(>|t|)", ""))
+			dimnames(cv.stat) <- list(attr(object@groups,"names"), c("Z^2","df","Pr(>|Z^2|)","W","Pr(>|W|)", ""))
 			print(cv.stat)
 			cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
-
 		}
-		cat("\n Estimated Cut-off Points for K =",object@groups[object@index],":\n")
+		cat("\nCut-off points selected for K =",paste(object@groups[object@index],":\n", sep = ""))
 	}
-	else cat("\n Estimated Cut-off Points for K =",object@groups,":\n")
+	else cat("\nCut-off points selected for K =",paste(object@groups,":\n",sep = ""))
 	print(round(cutpoint,2))
 
-	cat("\n Pairwise comparisons using log-rank tests \n")
+	cat("\nPairwise comparisons using two-sample tests:\n")
 	data <- object@data
 	data$group <- object@where
 	pair <- combn(unique(object@where),2)
@@ -325,7 +323,7 @@ setMethod("show", "apss", function(object){
 	res <- p.adjust(res, method = object@Options@p.adjust.methods)
 	pair.mat <- matrix(NA, ncol = length(object@split.pt), nrow = length(pts))
 	pair.mat[!upper.tri(pair.mat)] <- res
-	pair.mat <- round(pair.mat, 5)
+	pair.mat <- round(pair.mat, 4)
 	## adjust split points
 	tmps <- range(data[,object@split.var])
 	pts <- c(tmps[1], pts, tmps[2])
@@ -334,11 +332,11 @@ setMethod("show", "apss", function(object){
 	colnames(pair.mat) <- paste(colnames(pair.mat),pts[-c(1,length(pts))], sep = "")
 	rownames(pair.mat) <- paste(pts[-c(1,length(pts))],"<x<=", sep = "")
 	rownames(pair.mat) <- paste(rownames(pair.mat), pts[-(1:2)],sep="")
-	pair.mat <- ifelse(pair.mat < 1.0e-6, "<.0000", pair.mat)
+	pair.mat <- ifelse(pair.mat < 1.0e-5, "<.0000", pair.mat)
 	pair.mat <- ifelse(!is.na(pair.mat), pair.mat, "-")
 	pair.mat <- as.data.frame(pair.mat)
 	print(pair.mat)
-	cat("\n P-value adjustment method:" ,object@Options@p.adjust.methods, "\n")
+	cat("\nP-value adjustment method:" ,object@Options@p.adjust.methods, "\n")
 	invisible(object)
 	}
 )
@@ -436,14 +434,14 @@ setMethod("plot","apss",function(x, K, ...){
 
 		plot(x@elbow[2,], type = "b", col = "blue", xlab = "", ylab = "",axes = FALSE, ylim = c(0,max(x@elbow[2,])),...)
 		mtext("# of subgroups (K)", side=1, line=3, cex=1.2)
-		mtext(expression(bar(Z)^cv), side=2, line=2, cex=1.2)
+		mtext(expression(bar(Z^2)(K)), side=2, line=2, cex=1.2)
 		abline(h = 3.84, col = "gray", lty = 2)
 		axis(side = 1, at = 1:ncol(x@elbow), labels =  x@groups)
 		axis(side = 2)
 
 		plot(x@elbow[4,], type = "b", col = colors()[630], xlab = "", ylab = "", ylim = c(0,ceiling(max(x@elbow[4,]))), axes = FALSE,...)
 		mtext("# of subgroups (K)", side=1, line=3, cex=1.2)
-		mtext(expression(bar(t)^cv), side=2, line=2, cex=1.2)
+		mtext(expression(bar(W)(K)), side=2, line=2, cex=1.2)
 		abline(h = 1.64, col = "gray", lty = 2)
 		axis(side = 1, at = 1:ncol(x@elbow), labels =  x@groups)
 		axis(side = 2)

@@ -1,4 +1,8 @@
 ############################################################################################
+kaps 0.9-3
+- Modify print function for kaps().
+
+############################################################################################
 kaps 0.9-2
 - Treat the example of cost-complexity pruning as an annotation to reduce computing cost in the check process.
 
@@ -35,7 +39,7 @@ kaps 0.7.5
 kaps 0.7.2
 - Delete apss() in the NAMESPACE. the function apss() serves as a internal for kaps()
 - Change the treat type for minor parameters in kaps()
-- Change the nume of group argrument as K in order to harmonize the articel and programs
+- Change the name of group argrument as K in order to harmonize the articel and programs
 
 ############################################################################################
 kaps 0.7.1
@@ -119,7 +123,7 @@ rap 0.2.0
 
 ############################################################################################
 apss 0.1.6
-- Add the Wilson-Hilferty approximation statstic to select optimal numbser of subgroups. 
+- Add the Wilson-Hilferty approximation statstic to select optimal number of subgroups. 
 - Add the function seer.staging in order to provide WH approximation statistic and permutation test among groups.
 
 ############################################################################################
