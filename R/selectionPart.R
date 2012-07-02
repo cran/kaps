@@ -1,4 +1,4 @@
-logrank.tree <- function(x, y, controls){
+logrank.tree <- function(x, y, controls, verbose = FALSE){
 ################################################
 ### splitting algorithms for logrank and median survival tree
 ### Soo-Heang Eo
@@ -14,17 +14,17 @@ logrank.tree <- function(x, y, controls){
 	gr <- rep(NA, length(y))
 	xx <- c()
 	yy <- c()
-
-	if(is.factor(x)){ # categorical predictors
-		# CHECKME: must be modified by using shortcut algrithm (Breiman et al, 1984)
- 		m <- unique(x)
-		m <- m[-length(m)]
-		for(i in 1:(length(m)-1)) {
-			pt <- as.matrix(combn(m,i))
-			for(j in 1:(ncol(pt) -1)){
-				gr <- ifelse(x %in% pt[,i],1,2)
+	if(is.factor(x)){
+		
+	}
+	else{
+		if(is.na(any(controls@SplitCtrl@pre.pt))) pt <- sort(unique(x))
+		else pt <- controls@SplitCtrl@pre.pt
+		for(i in 1:(length(pt) - 1)){
+			gr <- ifelse(x <= pt[i], 1, 2)
+			if(length(unique(gr)) >= 2) {
 				if((length(gr[gr == 1]) >= controls@SplitCtrl@minbucket) & 
-					(length(gr[gr == 2]) >= controls@SplitCtrl@minbucket) ) {
+				(length(gr[gr == 2]) >= controls@SplitCtrl@minbucket) ) {
 					if(controls@SplitCtrl@fitted.model == "logrank") {
 						fit <- survdiff(y ~ gr, rho = controls@VarCtrl@rho)
 						test.tmp <- fit$chisq
@@ -39,30 +39,6 @@ logrank.tree <- function(x, y, controls){
 						test.stat <- test.tmp
 						cut.pt <- pt[i]
 					}
-				}
-			}
-		}
-	}
-	else{ # Numerical predictors
-		if(is.na(any(controls@SplitCtrl@pre.pt))) pt <- sort(unique(x))
-		else pt <- controls@SplitCtrl@pre.pt
-		for(i in 1:(length(pt) - 1)){
-			gr <- ifelse(x <= pt[i], 1, 2)
-			if((length(gr[gr == 1]) >= controls@SplitCtrl@minbucket) & 
-				(length(gr[gr == 2]) >= controls@SplitCtrl@minbucket) ) {
-				if(controls@SplitCtrl@fitted.model == "logrank") {
-					fit <- survdiff(y ~ gr, rho = controls@VarCtrl@rho)
-					test.tmp <- fit$chisq
-				}
-				else if(controls@SplitCtrl@fitted.model == "cart") {
-					fit <- survfit(y ~ gr)
-					test.tmp <- survmed(fit$surv, fit$time)
-				}
-				xx <- c(xx, pt[i])
-				yy <- c(yy, test.tmp)
-				if(test.tmp > test.stat){
-					test.stat <- test.tmp
-					cut.pt <- pt[i]
 				}
 			}
 		}

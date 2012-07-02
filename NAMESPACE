@@ -1,4 +1,4 @@
-export(apss.control, count.mindat, kaps, km.curve, lrtree, lrtree.control, kapsNews)
+export(kaps.control, count.mindat, kaps, km.curve, lrtree, lrtree.control, kapsNews)
 import(methods)
 import(graphics)
 ## S4 class

@@ -1,8 +1,0 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%		ToDo List		%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-1. Treat zero as one of the options, all, group, and empty.
-1. Add permutation test to improve statistical accuracy
-4. Develope Bayesian partitioning for censored data
-

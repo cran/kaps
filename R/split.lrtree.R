@@ -1,5 +1,5 @@
 split.lrtree <-
-function(dataSet, controls, duplicated.data){
+function(dataSet, controls, duplicated.data, verbose = FALSE){
 #################################################################
 ## Binary Splits for Censored Data
 ## Select the growing method: logrank (Segal, 1988) 
@@ -8,6 +8,7 @@ function(dataSet, controls, duplicated.data){
 	result <- new("SplitRes")
 	if(controls@TGCtrl@tree.size == "Boot"){
 		n <- nrow(dataSet@X)
+		## determination of the tree size using Bootstrapping 
 		tree.boot <-function(n, dataSet, controls){
 			ind<-sample(n,replace=TRUE)
 			dataSet@Y <- dataSet@Y[ind,]
@@ -47,10 +48,11 @@ function(dataSet, controls, duplicated.data){
 		result@Obs <- which(dataSet@X[, result@Var] <= result@Point)
 		return(result)
 	}
-	else{
+	else if(controls@TGCtrl@tree.size == "direct"){
 		tree.imp <- sapply(dataSet@X[duplicated.data,, drop = FALSE], logrank.tree,
 			y = dataSet@Y[duplicated.data,],
-			controls = controls
+			controls = controls,
+			verbose = verbose
 		)
 		imp.which <- which(tree.imp[[2]] == max(tree.imp[[2]], na.rm = TRUE))
 		if(length(imp.which) >= 2) imp.which <- imp.which[sample(length(imp.which), 1)]

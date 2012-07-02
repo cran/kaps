@@ -5,7 +5,7 @@ setOldClass("apssOptions")
 setOldClass("Surv")
 ##########################################
 ### A class for adaptive partitioning
-setClass(Class = "apssOptions",
+setClass(Class = "kapsOptions",
 	representation = representation(
 		pre.pt 		=	"list",
 		scope		=	"list",
@@ -14,6 +14,8 @@ setClass(Class = "apssOptions",
 		rho			=	"numeric",
 		fold		=	"logical",
 		ncl			=	"integer",
+		splits 		=	"character",
+		shortcut	=	"logical",
 		p.adjust.methods	= 	"character"
 	)
 )
@@ -23,22 +25,21 @@ setClass(Class = "apss",
 		call				= "language",
 		formula				= "Formula",
 		data				= "data.frame",
-		where  				= "vector",  
+		groupID				= "vector",  
 		index				= "integer",
-		Chisq 		 		= "numeric",
+		X					= "numeric",
+		Z 		 			= "numeric",
 		pvalue				= "numeric",
 		WH					= "numeric",
 		t					= "numeric",
-		Z					= "numeric",
 		pair				= "numeric",
 		split.var		 	= "character",
 		split.pt		 	= "numeric",
-		#g.ID				= "matrix",
 		mindat				= "numeric",
 		elbow				= "matrix",
 		groups				= "vector",
-		candid				= "list",
-		Options				= "apssOptions"
+		results				= "list",
+		Options				= "kapsOptions"
 	)
 )
 
@@ -113,10 +114,10 @@ setClass(Class = "SplitCtrl",
 		minsplit = as.integer(20),
 		minbucket = as.integer(7),
         WH.strd   = 1,
-		fitted.model = "studi",
+		fitted.model = "logrank",
 		con.spt.sel = "Greedy",
 		cat.spt.sel = "ESA",
-		L.split = TRUE,
+		L.split = FALSE,
 		time.varying = FALSE,
 		MultiLevel = FALSE,
 		pre.pt = NA
@@ -235,8 +236,6 @@ setClass(Class = "Tree",
 		frame 				= "data.frame",
 		controls			= "HyperParaControl",
 		where  				= "vector",     
-		subset 				= "NULL",
-		weights 			= "NULL",
 		alpha           	= "numeric" ,
 		alpha.prime 		= "numeric"
 	)

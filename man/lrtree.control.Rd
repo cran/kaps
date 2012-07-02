@@ -7,7 +7,7 @@
 \usage{
 	lrtree.control(minsplit = 20, minbucket = round(minsplit/2), maxdepth = 5, eps = 3.84, WH.strd = 1,
 		fitted.model = c("logrank","cart"),
-		tree.size = c("Boot", "ML"), B = 200,
+		tree.size = c("direct", "Boot"), B = 200,
 		random = FALSE, plot = FALSE, 
 		rho = 0, pre.pt = NA,
         m.zero = 3, Jt = 2, classwt = FALSE, L.split = FALSE, time.varying = FALSE, ncl = 2
@@ -40,6 +40,7 @@
   }
   \item{tree.size}{
     a parameter to determine the size of the tree:\cr
+    \code{"direct"} - use a direct stopping rule with the minimum bucket.\cr
     \code{"Boot"} - use a bootstrapping split rule at each split.\cr
     \code{"ML"} - use Multi-Level direct stopping rule (Eo and Cho, 2012+). \cr
 	\code{"BU"} - use the Bottom-Up approach (Segal, 1988). \cr

@@ -17,8 +17,6 @@
     \item{\code{frame}:}{Object of class \code{"data.frame"}  }
     \item{\code{controls}:}{Object of class \code{"HyperParaControl"}  }
     \item{\code{where}:}{Object of class \code{"vector"}  }
-    \item{\code{subset}:}{Object of class \code{"numeric"} }
-    \item{\code{weights}:}{Object of class \code{"numeric"}  }
     \item{\code{alpha}:}{Object of class \code{"numeric"} }
     \item{\code{alpha.prime}:}{Object of class \code{"numeric"}  }
 	}

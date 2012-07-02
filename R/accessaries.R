@@ -46,7 +46,7 @@ combnat <- function(x,m){
 ## Calculate Chi-square and Adj. chi-square test statistics among subgroups.
 adj.test <- function(x){
 	data <- x@data
-	data$subgroups <- x@where
+	data$subgroups <- x@groupID
 	#data$group <- gr.sel[,index]
 	f <- update(x@formula, . ~ subgroups)		
 	test.stat <- survdiff(f, data = data)$chisq
@@ -57,8 +57,12 @@ adj.test <- function(x){
 	t <-(WH-x.mean)/(x.std)
 	#WH <- ( (7/9) + sqrt(nu)*((test.stat/ nu )^(1/3) - 1 + (2 / (9 * nu))))^3
 	#WH <- max(0, WH)
-	# return(c(Chisq = test.stat, adj.Chisq = WH))
-	return(c(Chisq = test.stat, adj.Chisq = x@Chisq, WH = WH, t = t))
+	### ouptut structure
+	# Chisq= overall test statistic for selected candidate
+	# adj.Chisq= pairwise test statistic for selected candidate
+	# WH= cube-root transformation
+	# t = t test
+	return(c(Chisq = test.stat, adj.Chisq = x@X, WH = WH, t = t))
 }
 
 ## Median Survival Time, refered to the print.survfit() in the survival package
@@ -87,17 +91,17 @@ surv.yrs <- function(pt, surv, time){
 	}
 }
 
-## summary functions for apss package
+## summary functions for apss class
 setGeneric("summary")
 setMethod("summary","apss", function(object,K){
-	if(!missing(K)) object <- object@candid[[which(object@groups == K)]]
+	if(!missing(K)) object <- object@results[[which(object@groups == K)]]
 
 	data <- object@data
 	f <- update(object@formula, . ~ 1)
 	surv.root <- survfit(f, data = data)
 	rootS <- summary(surv.root)
 	
-	data$Group <- object@where 
+	data$Group <- object@groupID 
 	f <- update(object@formula, . ~ Group)
 	surv.all <- survfit(f, data = data)
 	objS <- summary(surv.all)
@@ -119,9 +123,9 @@ setMethod("summary","apss", function(object,K){
 	gr.1yrs <- mapply( surv.yrs, surv = subgr.surv, time = subgr.time, MoreArgs = list(pt = 12))
 	gr.3yrs <- mapply( surv.yrs, surv = subgr.surv, time = subgr.time, MoreArgs = list(pt = 36))
 	gr.5yrs <- mapply( surv.yrs, surv = subgr.surv, time = subgr.time, MoreArgs = list(pt = 60))
-	obs <- table(object@where)
+	obs <- table(object@groupID)
 	obs <- as.vector(obs)
-	names(obs) <- names(gr.med)
+	names(obs) <- paste("",names(gr.med))
 	res <- data.frame( 
 		N = obs,
 		Med = gr.med,
@@ -129,9 +133,9 @@ setMethod("summary","apss", function(object,K){
 		yrs.3 = round(gr.3yrs,3),
 		yrs.5 = round(gr.5yrs,3)
 	)
-	rownames(res) <- names(gr.med)
+	rownames(res) <- names(obs)
 	res <- res[order(res$Med, decreasing = TRUE),]
-	res <- rbind(root = root, res)
+	res <- rbind(All = root, res)
 	return(res)
 	}
 )
@@ -240,13 +244,74 @@ setMethod("labels","Tree", function(object, type = "diagram") {
 	}
 )
 
+
 ####################################################################
-## print furnctions for an apss object used in apss()
+## print furnctions for an apss S4 class
 setGeneric("print")
 setMethod("print","apss", function(x,K){
-		if(!missing(K)) x <- x@candid[[which(x@groups == K)]]
-		x@Options@fold <- FALSE
-		show(x)
+		if(!missing(K)) {
+			index <- which(x@groups == K)
+			Chisq <- x@Z[index]
+			object <- x@results[[index]]
+			object@Z <- Chisq
+		}
+		else {
+			object <- x
+			return(show(object))
+		}
+		
+		pts <- round(object@split.pt,2)
+
+		cat("\nCut-off points selected: \n")
+		cutpoint <- matrix(object@split.pt, nrow = 1, ncol = length(pts))
+		rownames(cutpoint) <- object@split.var
+		colnames(cutpoint) <- c("1st pt", "2nd pt", "3rd pt", paste(4:20,"th pt", sep = ""))[1:length(object@split.pt)]
+		cutpoint_stat <- c()
+		cutpoint_stat$Z <- zapsmall(object@Z, digits = 3)
+		cutpoint_stat$df <- (object@groups)-1
+		cutpoint_stat$pvalue  <- round(1 - pchisq(q = cutpoint_stat$Z, df= cutpoint_stat$df),4)
+		Signif <- symnum(cutpoint_stat$pvalue, corr = FALSE, na = FALSE, 
+			  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+			  symbols = c("***", "**", "*", ".", " "))
+		cutpoint_stat$sig <- format(Signif)
+		cutpoint_stat <- as.data.frame(cutpoint_stat)
+		rownames(cutpoint_stat) <- object@split.var
+		colnames(cutpoint_stat) <- c("Z","df","Pr(>|Z|)","")
+		print(cutpoint)
+		print(cutpoint_stat)
+		cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
+
+		cat("\nP-values of pairwise comparisons\n")
+		data <- object@data
+		data$groupID <- object@groupID
+		pair <- combn(unique(object@groupID),2)
+		f <- update(object@formula, . ~ groupID)
+		res <- c()
+		for(i in 1:ncol(pair)){
+			data.tmp <- data[data$groupID %in% pair[,i],]
+			tmp <- survdiff(f, data = data.tmp, rho = object@Options@rho)
+			res[i] <- 1 - pchisq(tmp$chisq, 1)
+		}
+		# Adjsut P-values for Multiple Comparisons 
+		res <- p.adjust(res, method = object@Options@p.adjust.methods)
+		pair.mat <- matrix(NA, ncol = length(object@split.pt), nrow = length(pts))
+		pair.mat[!upper.tri(pair.mat)] <- res
+		pair.mat <- round(pair.mat, 4)
+		## adjust split points
+		tmps <- range(data[,object@split.var])
+		pts <- c(tmps[1], pts, tmps[2])
+		n.pts <- length(pts)
+		colnames(pair.mat) <- paste(pts[-(n.pts:(n.pts-1))],"<",object@split.var,"<=", sep = "")
+		colnames(pair.mat) <- paste(colnames(pair.mat),pts[-c(1,length(pts))], sep = "")
+		colnames(pair.mat)[1] <- paste(pts[1],"<=",object@split.var,"<=",pts[2], sep = "")
+		rownames(pair.mat) <- paste(pts[-c(1,length(pts))],"<",object@split.var,"<=", sep = "")
+		rownames(pair.mat) <- paste(rownames(pair.mat), pts[-(1:2)],sep="")
+		pair.mat <- ifelse(pair.mat < 1.0e-5, "<.0000", pair.mat)
+		pair.mat <- ifelse(!is.na(pair.mat), pair.mat, "-")
+		pair.mat <- as.data.frame(pair.mat)
+		print(pair.mat)
+		#cat("\nP-value adjustment method:" ,object@Options@p.adjust.methods, "\n")
+		invisible(object)
 	}
 )
 
@@ -255,67 +320,66 @@ setMethod("show", "apss", function(object){
 	cat("Call:\n")
 	print(object@call)
 	cat("\n")
-	cat("	      K-Adaptive Partitioning for Survival Data\n\n")
-	cat("Sample: ", nrow(object@data), "\n")
+	cat("	K-Adaptive Partitioning for Survival Data\n\n")
+	if (object@Options@fold & length(object@groups) >= 2) cat("Samples=", nrow(object@data), "				Optimal K=",object@groups[object@index], "\n")
+	else cat("Samples=", nrow(object@data), "\n")
 	
 	pts <- round(object@split.pt,2)
-	cutpoint <- matrix(object@split.pt, nrow = 1, ncol = length(pts))
-	rownames(cutpoint) <- object@split.var
-	colnames(cutpoint) <- c("1st pt", "2nd pt", "3rd pt", paste(4:20,"th pt", sep = ""))[1:length(object@split.pt)]
-	Signif <- symnum(object@pvalue, corr = FALSE, na = FALSE, 
-                  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
-                  symbols = c("***", "**", "*", ".", " "))
-	spt <- lapply(object@candid, function(x) x@split.pt)
-	spt <- sapply(spt, function(x) paste(x, collapse = ", "))
-		
+	
 	cat("\n")
-	if(length(object@groups) >= 2){
-		cat("\nSelecting a set of cut-off points:\n")
-		Signif <- symnum(object@pvalue, corr = FALSE, na = FALSE, 
-                  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
-                  symbols = c("***", "**", "*", ".", " "))
-		test.stat<-	zapsmall(object@Chisq,digits = 3)
-		test.stat <- data.frame(test.stat,
-			df = 1,
-			pvalue = round(object@pvalue,4),
-			pts = spt,
-			sig = format(Signif))
-		dimnames(test.stat) <- list(attr(object@groups,"names"), c("X^2", "df", "Pr(>|X^2|)","cut-off points",  ""))
-		print(test.stat)
-		cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
-		if(object@Options@fold){
-			cat("\nFinding an optimal K:\n")
-			cv.pvalue <- round(1 - pnorm(q = object@elbow[4,]),4)
-			cv.zvalue <- round(1 - pchisq(q = object@elbow[2,],df=1),4)
-			Signif <- symnum( (cv.pvalue+cv.zvalue)/2, corr = FALSE, na = FALSE, 
-			  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
-			  symbols = c("***", "**", "*", ".", " "))
-			cv.stat <- data.frame(
-				Z = object@elbow[2,],
-				df = as.integer(object@groups) - 1,
-				t = object@elbow[4,])
-			cv.stat<- zapsmall(cv.stat,digits = 3)
-			cv.stat <- cbind(cv.stat[,1:2], 
-				Zp = cv.zvalue,
-				cv.stat[,-c(1,2)],
-				pvalue = cv.pvalue,sig = format(Signif))
-			dimnames(cv.stat) <- list(attr(object@groups,"names"), c("Z^2","df","Pr(>|Z^2|)","W","Pr(>|W|)", ""))
-			print(cv.stat)
-			cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
-		}
-		cat("\nCut-off points selected for K =",paste(object@groups[object@index],":\n", sep = ""))
-	}
-	else cat("\nCut-off points selected for K =",paste(object@groups,":\n",sep = ""))
-	print(round(cutpoint,2))
+	cat("\nSelecting a set of cut-off points:\n")
+	spt <- lapply(object@results, function(x) x@split.pt)
+	spt <- sapply(spt, function(x) paste(x, collapse = ", "))
+	Z.stat <- zapsmall(object@Z, digits = 3) # overall test statistic
+	Z.stat.df <- (object@groups)-1
+	Z.stat.p <- round(1 - pchisq(q = Z.stat, df= Z.stat.df),4) #overall p-value
+	Signif <- symnum(Z.stat.p, corr = FALSE, na = FALSE, 
+			  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1,1), 
+			  symbols = c("***", "**", "*", "."," "))
 
-	cat("\nPairwise comparisons using two-sample tests:\n")
+	X.stat <- zapsmall(object@X,digits = 3) # optimal pair statistic
+	test.stat <- data.frame(Z.stat,
+		df1 = Z.stat.df,
+		pvalue1 = Z.stat.p,
+		X.stat,
+		df2 = 1,
+		pvalue = round(object@pvalue,4),
+		pts = spt,
+		sig = format(Signif))
+	dimnames(test.stat) <- list(attr(object@groups,"names"), c("Z", "df", "Pr(>|Z|)", "X", "df", "Pr(>|X|)", "cut-off points", ""))
+	print(test.stat)
+	
+	if(object@Options@fold & length(object@groups) >= 2){
+		cat("\nFinding an optimal K with cross-validation:\n")
+		cv.pvalue <- round(1 - pnorm(q = object@elbow[4,]), 4)
+		cv.zvalue <- round(1 - pchisq(q = object@elbow[2,],df=1), 4)
+		Signif <- symnum( (cv.pvalue+cv.zvalue)/2, corr = FALSE, na = FALSE, 
+		  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+		  symbols = c("***", "**", "*", ".", " "))
+		cv.stat <- data.frame(
+			Z = object@elbow[2,],
+			df = as.integer(object@groups) - 1,
+			t = object@elbow[4,])
+		cv.stat<- zapsmall(cv.stat,digits = 3)
+		cv.stat <- cbind(cv.stat[,1:2], 
+			Zp = cv.zvalue,
+			cv.stat[,-c(1,2)],
+			pvalue = cv.pvalue,
+			sig = format(Signif))
+		dimnames(cv.stat) <- list(attr(object@groups,"names"), c("X","df","Pr(>|X|)","W","Pr(>|W|)", ""))
+		print(cv.stat)
+		#cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
+	}
+	cat("---\nSignif. codes: ", attr(Signif, "legend"), "\n")
+
+	cat("\nP-values of pairwise comparisons\n")
 	data <- object@data
-	data$group <- object@where
-	pair <- combn(unique(object@where),2)
-	f <- update(object@formula, . ~ group)
+	data$groupID <- object@groupID
+	pair <- combn(unique(object@groupID),2)
+	f <- update(object@formula, . ~ groupID)
 	res <- c()
 	for(i in 1:ncol(pair)){
-		data.tmp <- data[data$group %in% pair[,i],]
+		data.tmp <- data[data$groupID %in% pair[,i],]
 		tmp <- survdiff(f, data = data.tmp, rho = object@Options@rho)
 		res[i] <- 1 - pchisq(tmp$chisq, 1)
 	}
@@ -328,15 +392,16 @@ setMethod("show", "apss", function(object){
 	tmps <- range(data[,object@split.var])
 	pts <- c(tmps[1], pts, tmps[2])
 	n.pts <- length(pts)
-	colnames(pair.mat) <- paste(pts[-(n.pts:(n.pts-1))],"<x<=", sep = "")
+	colnames(pair.mat) <- paste(pts[-(n.pts:(n.pts-1))],"<",object@split.var,"<=", sep = "")
 	colnames(pair.mat) <- paste(colnames(pair.mat),pts[-c(1,length(pts))], sep = "")
-	rownames(pair.mat) <- paste(pts[-c(1,length(pts))],"<x<=", sep = "")
+	colnames(pair.mat)[1] <- paste(pts[1],"<=",object@split.var,"<=",pts[2], sep = "")
+	rownames(pair.mat) <- paste(pts[-c(1,length(pts))],"<",object@split.var,"<=", sep = "")
 	rownames(pair.mat) <- paste(rownames(pair.mat), pts[-(1:2)],sep="")
 	pair.mat <- ifelse(pair.mat < 1.0e-5, "<.0000", pair.mat)
 	pair.mat <- ifelse(!is.na(pair.mat), pair.mat, "-")
 	pair.mat <- as.data.frame(pair.mat)
 	print(pair.mat)
-	cat("\nP-value adjustment method:" ,object@Options@p.adjust.methods, "\n")
+	#cat("\nP-value adjustment method:" ,object@Options@p.adjust.methods, "\n")
 	invisible(object)
 	}
 )
@@ -386,7 +451,7 @@ setMethod("show", "Tree", function(object){
 setGeneric("plot")
 setMethod("plot","apss",function(x, K, ...){
 		if(!missing(K) | !x@Options@fold) {
-			if (!missing(K)) x <- x@candid[[which(x@groups == K)]]
+			if (!missing(K)) x <- x@results[[which(x@groups == K)]]
 			else {
 				par(mfrow = c(1,2))
 
@@ -403,15 +468,15 @@ setMethod("plot","apss",function(x, K, ...){
 			}
 			km.curve(x)
 			legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
-				bty = "n", col = unique(x@where), lty = unique(x@where))
+				bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
 			return(invisible(x))
 		}
 		else K <- x@groups[x@index]
 		
 		if( (length(x@groups) == 1) ){
-			km.curve(x, main = paste("# of subgroups = ",K))
+			km.curve(x, main = paste("# of groups = ",K))
 			legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
-				bty = "n", col = unique(x@where), lty = unique(x@where))
+				bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
 			return(invisible(x))
 		}
 	
@@ -430,32 +495,31 @@ setMethod("plot","apss",function(x, K, ...){
 		
 		km.curve(x)
 		legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
-			bty = "n", col = unique(x@where), lty = unique(x@where))
+			bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
 
 		plot(x@elbow[2,], type = "b", col = "blue", xlab = "", ylab = "",axes = FALSE, ylim = c(0,max(x@elbow[2,])),...)
-		mtext("# of subgroups (K)", side=1, line=3, cex=1.2)
-		mtext(expression(bar(Z^2)(K)), side=2, line=2, cex=1.2)
+		mtext("K", side=1, line=3, cex=1.2)
+		mtext(expression(X), side=2, line=2, cex=1.2)
 		abline(h = 3.84, col = "gray", lty = 2)
 		axis(side = 1, at = 1:ncol(x@elbow), labels =  x@groups)
 		axis(side = 2)
 
 		plot(x@elbow[4,], type = "b", col = colors()[630], xlab = "", ylab = "", ylim = c(0,ceiling(max(x@elbow[4,]))), axes = FALSE,...)
-		mtext("# of subgroups (K)", side=1, line=3, cex=1.2)
-		mtext(expression(bar(W)(K)), side=2, line=2, cex=1.2)
+		mtext("K", side=1, line=3, cex=1.2)
+		mtext(expression(W), side=2, line=2, cex=1.2)
 		abline(h = 1.64, col = "gray", lty = 2)
 		axis(side = 1, at = 1:ncol(x@elbow), labels =  x@groups)
 		axis(side = 2)
-
 	}
 )
 
 ## plot Kaplan-Meire survival curves for termninal nodes
 km.curve <- function(object, 
 	x.lab = c(0,24,48,72,96,120, 144, 168, 192, 216, 240), ...){
-	object@data$where <- object@where 
-	f <- update(object@formula, . ~ where)
+	object@data$groupID <- object@groupID 
+	f <- update(object@formula, . ~ groupID)
 	surv.all <- survfit(f, data = object@data)
-	id.n <- length(unique(object@where))
+	id.n <- length(unique(object@groupID))
 	plot(surv.all, col= 1:id.n, lty = 1:id.n, axes=FALSE, cex=1, lwd=1.5, ...)
 	mtext("Survival months", side=1, line=3, cex=1.2)
 	mtext("Survival probability", side=2, line=3, cex=1.2)

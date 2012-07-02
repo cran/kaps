@@ -16,9 +16,8 @@ growing.lrtree <- function(Formula, dataSet, frame = NULL, nodenum = 1, controls
 		id.unique <- unique(dataSet@Z[,id.var])
 		duplicated.data <- !duplicated(dataSet@Z[,id.var])
 	} 
-	else{
-		duplicated.data <- rep(TRUE, nrow(dataSet@Y))
-	}
+	else duplicated.data <- rep(TRUE, nrow(dataSet@Y))
+	
 	tmp  <- coxph(dataSet@Y ~ 1) # fit a constant cox ph model.
 	tmp1 <- survfit(tmp)
 	
@@ -44,7 +43,7 @@ growing.lrtree <- function(Formula, dataSet, frame = NULL, nodenum = 1, controls
 	}# No split condition END
 	
 	## Binary Splits for Censored Data
-	spt.info <- split.lrtree(dataSet, controls, duplicated.data )
+	spt.info <- split.lrtree(dataSet, controls, duplicated.data , verbose = FALSE)
 	#names(spt.info@Impurity) <- NULL		
 
 	if( spt.info@Impurity <= controls@VarCtrl@eps | spt.info@Var == "" ){

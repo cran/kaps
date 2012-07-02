@@ -1,23 +1,40 @@
 ### predict functions for apss class
 setGeneric("predict")
-setMethod("predict","apss", function(object, newdata){
+setMethod("predict","apss", function(object, newdata, type = c("predict", "apss")){
 	## predict the ID for terminal subgroups 
-	if(missing(newdata)) where <- object@where
+	type <- match.arg(type)
+	if(missing(newdata)) {
+		where <- object@groupID
+		newdata <- object@data
+	}
 	else where <- pred.apss(object@split.pt, object@formula, newdata)
 	
-	newdata$subgroups <- where
-	f <- update(object@formula, . ~  subgroups)
-	test.chi <- survdiff(f, data = newdata)$chisq
-	test.adj.chi <- pairwise.test(where, data = newdata, formula = object@formula, rho = object@Options@rho, adj = object@Options@p.adjust.methods, splits = object@Options@splits)[1]
-	v <- length(object@split.pt)
-	x.mean <- 1 - 2 / (9 * v)
-	x.std <- sqrt(2 / (9 * v))
-	WH <- (test.chi / v)^(1/3)
-	t <-(WH - x.mean)/(x.std)
-	if(t <=0) t <- 0
-	return(pred.stat = c(test.chi, test.adj.chi, WH, t))
+	if( type == "predict"){
+		#tmps <- range(object@data[,object@split.var])
+		#match(, )
+		#pts <- c(tmps[1], round(object@split.pt,2), tmps[2])
+		result <- data.frame(Group = where, newdata)
+		rownames(result) <- "The estimated group="
+		#result$Range <- paste("(", "<X<=",")", sep = "")
+		#colnames(result) <- c("Newdata", "Group", "Range")
+		colnames(result) <- c("Group", colnames(newdata))
+		return(result)
+	}
+	else if(type == "apss"){
+		newdata$subgroups <- where
+		f <- update(object@formula, . ~  subgroups)
+		test.chi <- survdiff(f, data = newdata)$chisq
+		test.adj.chi <- pairwise.test(where, data = newdata, formula = object@formula, rho = object@Options@rho, adj = object@Options@p.adjust.methods, splits = object@Options@splits, shortcut = object@Options@shortcut)[1]
+		v <- length(object@split.pt)
+		x.mean <- 1 - 2 / (9 * v)
+		x.std <- sqrt(2 / (9 * v))
+		WH <- (test.chi / v)^(1/3)
+		t <-abs((WH - x.mean)/(x.std))
+		return(pred.stat = c(test.chi, test.adj.chi, WH, t))
+	}
 	}
 )
+
 
 pred.apss <- function(split.pt, f, newdata){
 #### find ID number for new data set
@@ -31,6 +48,7 @@ pred.apss <- function(split.pt, f, newdata){
 	nc <- length(split.pt)
 	gClass <- matrix(NA, ncol = nc, nrow = nrow(newdata))
 	gClass <- sapply(split.pt, function(x,y) y > x, y = X)
+	if(is.vector(gClass)) gClass <- t(gClass)
 	where <- apply(gClass, 1, sum)
 	where <- where + 1
 	return(where)

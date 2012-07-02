@@ -1,7 +1,7 @@
 Package: kaps
 Title: K Adaptive Partitioning for Survival data
-Version: 0.9-3
-Date: 2012-05-21
+Version: 0.9-8
+Date: 2012-07-02
 Author: Soo-Heang Eo and HyungJun Cho
 Maintainer: Soo-Heang Eo <hanansh@korea.ac.kr>
 Description: This package provides some routines to conduct the
@@ -17,5 +17,5 @@ URL: http://statlab.korea.ac.kr/kaps
 Depends: R (>= 2.14.0), methods, survival, Formula, grid, parallel,
         locfit
 Repository: CRAN
-Packaged: 2012-05-23 01:54:23 UTC; hanansh
-Date/Publication: 2012-05-23 07:37:23
+Packaged: 2012-07-02 12:52:09 UTC; hanansh
+Date/Publication: 2012-07-02 13:14:27

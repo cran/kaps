@@ -1,4 +1,19 @@
 ############################################################################################
+kaps 0.9-8
+- Add shortcut algorithm to reduce computational cost in kaps().
+- Change the output of the apss S4 class. #show()
+- Change the plot devide for the apss S4 class #plot()
+
+
+############################################################################################
+kaps 0.9-5
+- Fixed an error that did not treat a vector in predict().
+
+############################################################################################
+kaps 0.9-4
+- Bug fixed.
+
+############################################################################################
 kaps 0.9-3
 - Modify print function for kaps().
 

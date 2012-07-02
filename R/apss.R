@@ -1,4 +1,4 @@
-apss <- function(formula, data, K = 3, mindat = floor(nrow(data) * 0.01), minors = apss.control()) {
+apss <- function(formula, data, K = 3, mindat = floor(nrow(data) * 0.05), minors = kaps.control()) {
 ###################################################################
 ####
 ####		Adaptive Partitioning and Substaging for survival data
@@ -42,7 +42,7 @@ apss <- function(formula, data, K = 3, mindat = floor(nrow(data) * 0.01), minors
 		pt.set.name <- names(pt.set)
 	}
 	
-	result@Chisq <- 0
+	result@Z <- 0
 	pt.set <- lapply(pt.set, function(x,upper, lower) x[x <= upper & x >= lower], upper = minors@upper.limit, lower = minors@lower.limit)
 	
 	v <- K-1
@@ -60,15 +60,15 @@ apss <- function(formula, data, K = 3, mindat = floor(nrow(data) * 0.01), minors
 		x.test <- test.where$test
 		
 		##### Result
-		if(x.test[1,test.where$index] >= result@Chisq) {
+		if(x.test[1,test.where$index] >= result@Z) {
 			index <- test.where$index
-			result@Chisq <- x.test[1,index]
-			result@WH <- (x.test[1,index] / v)^(1/3)
-			result@t <- (result@WH - (1- (2 / (9*v)))) / sqrt(2 / (9 * v))
-			result@pvalue <-  1 - pt(q = result@t, df = 1 )
-			result@pair <- x.test[3,index]
-			result@where <- test.where$where
-			result@split.pt <- sapply(unique(result@where), function(x,y,where) max(y[where == x]), y = X[,i], where = result@where) 
+			result@X <- x.test[1,index] # pairwise test statistic X
+			#result@WH <- (x.test[1,index] / v)^(1/3)
+			#result@t <- (result@WH - (1- (2 / (9*v)))) / sqrt(2 / (9 * v))
+			result@pvalue <-  x.test[2,index] # pairwise p-value
+			result@pair <- x.test[3,index] # pair for selected
+			result@groupID <- test.where$where
+			result@split.pt <- sapply(unique(result@groupID), function(x,y,where) max(y[where == x]), y = X[,i], where = result@groupID) 
 			result@split.pt <- result@split.pt[-length(result@split.pt)]
 			result@split.var <- colnames(X[,i,drop =FALSE])
 			result@data <- data
@@ -100,7 +100,7 @@ K.apss <- function(K, V, formula, data, mindat, minors){
 			train <- data[fold.no != i,, drop = FALSE]
 			test <- data[fold.no == i,, drop = FALSE]
 			sapss <- lapply(K, apss, formula = formula, data = train, mindat= mindat, minors = minors)
-			tmp <- sapply(sapss, predict, newdata = test)
+			tmp <- sapply(sapss, predict, newdata = test, type = "apss")
 			fold.chi[i,] <- tmp[1,]
 			fold.adj.chi[i,] <- tmp[2,]
 			fold.WH[i,] <- tmp[3,]
@@ -116,7 +116,7 @@ K.apss <- function(K, V, formula, data, mindat, minors){
 			train <- data[fold.no != i,, drop = FALSE]
 			test <- data[fold.no == i,, drop = FALSE]
 			sapss <- parLapply(ncl, K, apss, formula = formula, data = train, mindat= mindat, minors = minors)
-			tmp <- parSapply(ncl, sapss, predict, newdata = test)
+			tmp <- parSapply(ncl, sapss, predict, newdata = test, type = "apss")
 			fold.chi[i,] <- tmp[1,]
 			fold.adj.chi[i,] <- tmp[2,]
 			fold.WH[i,] <- tmp[3,]
@@ -139,7 +139,7 @@ apss.boot <- function(fit, B = 200){
 	if(!inherits(fit, "apss")) stop("This function requires the object of apss class as a main object.")
 	data <- fit@data
 	formula <- fit@formula
-	K <- length(unique(fit@where))
+	K <- length(unique(fit@groupID))
 	minors <- fit@Options
 	mindat <- fit@mindat
 	

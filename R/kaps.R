@@ -7,7 +7,7 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 #####           pre-processing step
 	options(warn = -1)
 	if(missing(mindat)) mindat = floor(nrow(data) * 0.05)
-	minors = apss.control(...)
+	minors = kaps.control(...)
 	if(any(K == 1)) stop("the number of subgroups (K) must be greater than .")
 	n <- nrow(data) # total number of observations concerning with time 
 	rownames(data) <- 1:n
@@ -21,7 +21,7 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 	if(minors@ncl ==1){
 		cat("Now, selecting a set of cut-off points...\n")
 		aps <- lapply(K, apss, formula = formula, data = data, mindat= mindat, minors = minors)
-		if(minors@fold){
+		if(minors@fold & length(K) >= 2){
 			cat("Now, finding an optimal K...\n")
 			elbow.stat <- K.apss(K, V, formula, data, mindat, minors )
 		}
@@ -33,22 +33,25 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 		cat("Now, running kaps algorithm for your data\n")
 		aps <- parLapply(ncl,K, apss, formula = formula, data = data, mindat= mindat, minors = minors)
 		stopCluster(ncl)
-		if(minors@fold) {
+		if(minors@fold & length(K) >= 2) {
 			cat("Now, finding optimal K. \nPlease, wait...\n")
 			elbow.stat <- K.apss(K, V, formula, data, mindat, minors )
 		}
 	}
-	## Do permutation test
 	# Declare Group k as the number of terminal nodes if k is maximum among WH statistic.
 	test.stat <- sapply(aps, adj.test)
-	if(minors@fold ){
+	## output of test.stat
+	# test.stat[1,] = overall statistic
+	# test.stat[2,] = optimal pair test staitstic
+	# test.stat[3,] = cube-root transformation
+	# test.stat[4,] = WH approximation statistic
+	if(minors@fold & length(K) >= 2){
 		if(length(K) > 1) {
-			test.tmp <- elbow.stat[,elbow.stat[2,] >= 3.8, drop = FALSE]
-			if( ncol(test.tmp) >= 0) {
-				pvalue <- round(1 - pnorm(q = test.tmp[4,]),4)
-				zvalue <- round(1 - pchisq(q = test.tmp[2,],df=1),4)
-				value.std <- (pvalue + zvalue) / 2
-				index <- which(value.std == min(value.std))
+			test.tmp <- elbow.stat[,elbow.stat[2,] >= 3.8, drop = FALSE] # optimal pair statistic
+			if( ncol(test.tmp) >= 1) {
+				Xvalue <- round(1 - pchisq(q = test.tmp[2,],df=1),4) # optimal pair p-value
+				index <- which(Xvalue <= 0.05)
+				index <- which.max(test.tmp[4,index]) # WH statistic
 				if(length(index) >= 2) index <- index[length(index)]
 			}
 			else index <- 1
@@ -59,10 +62,9 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 		if(length(K) > 1) {
 			test.tmp <- test.stat[,test.stat[2,] >= 3.8, drop = FALSE]
 			if( ncol(test.tmp) >= 1){
-				pvalue <- round(1 - pnorm(q = test.tmp[4,]),4)
-				zvalue <- round(1 - pchisq(q = test.tmp[2,],df=1),4)
-				value.std <- (pvalue + zvalue) / 2
-				index <- which(value.std == min(value.std))
+				Xvalue <- round(1 - pchisq(q = test.tmp[2,],df=1),4)
+				index <- which(Xvalue <= 0.05)
+				index <- which.max(test.tmp[4,index])
 				if(length(index) >= 2) index <- index[length(index)]
 			}
 			else index <- 1
@@ -72,17 +74,15 @@ kaps <- function(formula, data, K = 2:5, V = 5, mindat  , ...){
 
 	result <- aps[[index]]
 	result@index <- as.integer(index)
-	#result@pvalue <- 1 - pt(q = test.stat[4,], df = 1 )
-	result@pvalue <- 1 - pnorm(q = test.stat[4,])
+	result@pvalue <- 1 - pchisq(q = test.stat[2,], df = 1) # optimal pair p-value
 	result@groups <- K
 	attr(result@groups,"names") <- paste("K=",K,sep="")
-	if(minors@fold) result@elbow <- elbow.stat
- 	result@Chisq <- test.stat[1,]
-	result@Z <- test.stat[2,]
-	result@WH <- test.stat[3,]
-	result@t <- test.stat[4,]
-	#result@g.ID <- sapply(aps,function(x) x@where)
-	result@candid <- aps
+	result@Z <- test.stat[1,] #overall statistic for selection candidate
+	result@X <- test.stat[2,] #optimal pair p-value
+	result@WH <- test.stat[3,] #cube-root transformation
+	result@t <- test.stat[4,] #WH approximation statistic
+	result@results <- aps
+	if(minors@fold & length(K) >= 2) result@elbow <- elbow.stat
 	result@call <- call
 	return(result)
 }

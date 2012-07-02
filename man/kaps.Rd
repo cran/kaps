@@ -20,7 +20,7 @@
     an object with the type of numeric in order to set the minimum number of observations at each subgroup.
   }
   \item{\ldots}{
-	an object with the type of S4 class, "apssOptions", that provides several minors paramters. See \link{apss.control}.
+	an object with the type of S4 class, "kapsOptions", that provides several minors paramters. See \link{kaps.control}.
   }
 }
 \details{
@@ -31,11 +31,11 @@
     HyungJun Cho \email{hj4cho@korea.ac.kr} \cr
 }
 \references{
-Eo, SH, Hong, S-M and Cho, H (2012+). K-Adaptive Partitioning for Survival data with the application to SEER, in progression.  
+Eo, SH, Hong, S-M and Cho, H (2012+). K-Adaptive Partitioning for Survival data with the application to SEER, submitted to Journal of Statitical Software.  
 }
 \seealso{
 	 \code{\link{show}}, \code{\link{plot}}, \code{\link{predict}}, \code{\link{print}} and \code{\link{summary}} for the convenient use of kaps() \cr
-	 \code{\link{apss.control}} to control kaps() more detail \cr
+	 \code{\link{kaps.control}} to control kaps() more detail \cr
 	 \code{\link{lrtree}}, \code{\link{lrtree.control}} for counterpart of kaps()
 }
 \examples{
@@ -43,19 +43,14 @@ data(toy)
 f <- Surv(time, status) ~ meta
 # Fit maps algorithm without cross validation.
 # It means the step to finding optimal K is not entered.
-#fit1 <- kaps(f, data = toy, K = 2:5, fold = FALSE)
+fit1 <- kaps(f, data = toy, K = 3)
 
 # show the object of kaps (it contains apss S4 class)
-#fit1
-
-# summary of the object
-#summary(fit1)
-# If you want show another summary statistic for arbitrary K
-#summary(fit1, K = 2) # It executes summary function of kaps with the result of K = 2.
+fit1
 
 # plot Kaplan-Meire survival curves
-#plot(fit1)
-#plot(fit1,K=3) # for K =2
+plot(fit1)
+
 # To conduct cross-validation, use V argument without fold input.
 fit2 <- kaps(f, data = toy, K= 2:4, V=5) # It conduct kaps with V-fold cross-validation when V=5.
 fit2

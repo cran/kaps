@@ -1,6 +1,6 @@
 ### Set S4 class
 ## Top-level functions for lrtree algorithms
-lrtree <- function(Formula, data, subset = NULL, weights = NULL, ...) {
+lrtree <- function(Formula, data, ...) {
 #########################################################
 #####           pre-processing step
 #########################################################
@@ -33,7 +33,7 @@ lrtree <- function(Formula, data, subset = NULL, weights = NULL, ...) {
 	dataSet <- new("dataset")
 	dataSet@Y <- Surv(data[,vars[1]], data[,vars[2]])
 	dataSet@X <- model.part(Formula, data = data, rhs = 1)
-	dataSet@Z <- model.part(Formula, data = data, rhs = 2)
+	#dataSet@Z <- model.part(Formula, data = data, rhs = 2)
 
 	where <- rep(1, nrow(dataSet@Y)) 
 	attr(where,"names") <- rownames(dataSet@X)
@@ -42,18 +42,20 @@ lrtree <- function(Formula, data, subset = NULL, weights = NULL, ...) {
 	result@frame <- as.data.frame(frameID$frame)
 	result@where <- frameID$ID
     result@controls <- controls
-    result@weights <- weights
+    #result@weights <- weights
 
 		
 ######################################
 #####   for all of the pruning 
 ######################################
-
-    candidate.tree <- candidate.prune(result)
-    result@alpha <- candidate.tree$alpha
- 	result@alpha.prime <- sqrt(cumprod(result@alpha))
-	result@alpha.prime[1] <- 0
-    result@frame$complexity <- as.numeric(0)
-    result@frame$complexity[pmatch(candidate.tree$node.change, result@frame$Node)]<- round(result@alpha,3)
+	
+	if(nrow(result@frame) >= 2){
+		candidate.tree <- candidate.prune(result)
+		result@alpha <- candidate.tree$alpha
+		for(i in 1:(length(result@alpha)-1)) result@alpha.prime[i] <- exp(mean(log(result@alpha[i:(i+1)])))
+		result@alpha.prime <- c(0, result@alpha.prime, result@alpha[length(result@alpha)])
+		result@frame$complexity <- as.numeric(0)
+		result@frame$complexity[pmatch(candidate.tree$node.change, result@frame$Node)]<- round(result@alpha,3)
+	}
     return(result)
 }
