@@ -1,22 +1,20 @@
 \name{predict}
 \docType{methods}
 \alias{predict}
-\alias{predict,apss-method}
-\alias{predict,Tree-method}
-\title{Predict new data witgh the fitted model \code{kaps} .}
-\usage{
-\S4method{predict}{apss}(object, newdata, type = c("predict","apss"))
-\S4method{predict}{Tree}(object, newdata)
-}
+\alias{predict,kaps-method}
+\title{Predict new values using the fitted object "kaps".}
 \description{
-This function produces predicted values, obtained by evaluationg the kaps in the frame newdata predict. 
+	This function provides the predicted subgroup or test statistics.
+}
+\usage{
+\S4method{predict}{kaps}(object, newdata, type = c("predict","kaps"))
 }
 \arguments{
-  \item{object}{object of S4 class \code{apss}.}
-  \item{newdata}{An optinal data frame in which to look for variables with which to predict. If omitted, the fitted values are used.}
-  \item{type}{A logical argument. If "predict", predict an apss class. The type of "apss" is used for the internal useness.}
+  \item{object}{object from \code{kaps}.}
+  \item{newdata}{An optinal argument in which the name of predicted object is located. If omitted, the dataset used in the model fitting is utilized.}
+  \item{type}{a type of preddiction. If "predict", predict subgroups based on the fitted model. If a type is "kaps", it returns the overall and worst-pair test staiststics for estimated subgroups.}
 }
 \seealso{
-  \code{\link{kaps}}, \code{\link{lrtree}}
+  \code{\link{kaps}}
 }
 \keyword{methods}

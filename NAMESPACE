@@ -1,6 +1,13 @@
-export(kaps.control, count.mindat, kaps, km.curve, lrtree, lrtree.control, kapsNews)
-import(methods)
-import(graphics)
-## S4 class
-exportClasses(apss, Tree)
-exportMethods(print, show, plot, predict, summary, labels, text, prune) 
+useDynLib("kaps")
+
+## base packages
+importFrom("graphics", plot)
+importFrom("methods", show)
+import("Formula")
+import("survival")
+import("coin")
+
+export(kaps.control, kaps, count.mindat, km.curve)
+
+exportClasses(kaps)
+exportMethods(show, print, plot, predict, summary) 

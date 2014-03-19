@@ -1,20 +1,18 @@
 \name{show}
 \docType{methods}
 \alias{show}
-\alias{show,apss-method}
-\alias{show,Tree-method}
-\title{Methods for Function \code{show} for the "apss" and "Tree" classes. }
+\alias{show,kaps-method}
+\title{Show an object "kaps"}
 \usage{
-\S4method{show}{apss}(object)
-\S4method{show}{Tree}(object)
+\S4method{show}{kaps}(object)
 }
-\description{show simple summary for \code{\link{kaps}} and \code{\link{lrtree}} objects.  It provide just the call and the structure of test-statistic.
+\description{
+	It returns the outputs of the object "kaps" consisting of three parts. The first part displays the model formula with a dataset and the selected number for K. Next, the information regarding the selection of an optimal set of cut-off points is provided. Lastly, the p-values of pairwise two-sample test comparisons among all the pairs of subgroups are provided.
 }
 \arguments{
-  \item{object}{object of S4 class \code{Tree} or \code{apss}.}
+  \item{object}{an object from \code{kaps}.}
 }
 \seealso{
-  \code{\link{lrtree}} and \code{\linkS4class{Tree}} class \cr
-  \code{\link{kaps}} and \code{\linkS4class{apss}} class
+  \code{\link{kaps}}
 }
 \keyword{methods}

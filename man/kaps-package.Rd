@@ -2,32 +2,32 @@
 \alias{kaps-package}
 \docType{package}
 \title{
-	Functions for K-adaptive partitioning and recursive partitioning for censored survival data.
+	K-adaptive partitioning for survival data.
 }
 \description{
-  This package provides some routines for K-adaptive partitioning and recursive partitioning algorithms for censored survival data.
+This package provides some routines to conduct K-adaptive partitioning algorithm, which divides the dataset into K heterogeneous subgroups based on the information from a prognostic factor.
 }
 \details{
 \tabular{ll}{
 Package: \tab kaps\cr
 Type: \tab Package\cr
-Version: \tab 1.0.0\cr
-Date: \tab 2012-03-15\cr
-License: \tab GPL version 2 or newer\cr
+Version: \tab 1.0-0\cr
+Date: \tab 2014-03-19\cr
+License: \tab GPL-3\cr
 LazyLoad: \tab no\cr
 }
-This package contains some routines for K-adaptive partitioning and recursive partitioning algorithms when the data is censored, especially the application to SEER (Surveillance Epidemiology and End Results).
+This package contains some routines to conduct a \emph{K}-adaptive partitioning for survival data (kaps) algorithm. A function \code{kaps} is an implementation version of our algorithm which provides minimax-based partitioing rule. 
 }
 \author{
-Soo-Heang Eo <hanansh@korea.ac.kr> and HyungJun Cho <hj4cho@korea.ac.kr>
+Soo-Heang Eo <hanansh@korea.ac.kr> \cr
+Seung-Mo Hong <smhong28@gmail.com> \cr
+HyungJun Cho <hj4cho@korea.ac.kr>
 }
 
 \references{
-Eo, SH, Hong, S-M and Cho, H (2012+). K-Adaptive Partitioning for Survival data with the application to SEER, in progression.  \cr
-
-
+SH Eo, S-M Hong and H Cho (2014). \emph{K}-adaptive partitioning for survival data, \emph{submitted}.\cr
 }
 \seealso{
-    \code{\link{kaps}}, \code{\link{lrtree}}
+    \code{\link{kaps}} 
 }
 \keyword{ package }

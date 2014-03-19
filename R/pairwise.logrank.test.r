@@ -1,15 +1,10 @@
-.onLoad <- function(libname, pkgname){
-  library.dynam("kaps", package = pkgname, lib.loc = libname)
-  return(invisible(0))
-}
-
-pairwise.test <- function(x,  data, formula, rho, adj, splits, shortcut){
+pairwise.logrank.test <- function(x, data, formula, rho, adj, splits, shortcut){
 	###################################################################
 	## Step 1. finding a set of cut-off points 
 	## 1-1. Calculate minimum test statistics among possible pairs in the candidate s
 	###################################################################
 	# treat pre-determined range for predictors
-	data$K <- x
+	data$subgroups <- x
 	pair <- combnat(unique(x),2)
 	#pair <- combn(unique(x),2)
 	
@@ -18,21 +13,29 @@ pairwise.test <- function(x,  data, formula, rho, adj, splits, shortcut){
 	
 	res <- matrix(NA, nrow = ncol(pair), ncol=3)
 	for(i in 1:ncol(pair)){
-		data.tmp <- data[data$K %in% pair[,i],]
+		data.tmp <- data[data$subgroups %in% pair[,i],]
 		if(splits == "logrank"){
-		tmp <- survdiff(formula = formula, data = data.tmp, rho = rho)
-		res[i,1] <- tmp$chisq # pair-wise test statistic
-		res[i,2] <- 1 - pchisq(tmp$chisq, 1) # pair-wise p-value
-		res[i,3] <- as.numeric(paste(pair[,i], collapse ="")) # pairs for candidates
-		}
-		#else if(splits == "maxstat"){
-		#	class(formula) <- "formula"
-		#	tmp <- maxstat.test(formula= formula, data = data.tmp, smethod="LogRank",
-		#		pmethod="exactGauss",minprop = 0.01, maxprop = .99)
-		#	res[i,1] <- tmp$statistic # pair-wise test statistic
-		#	res[i,2] <- tmp$p.value # pair-wise p-value
-		#	if(is.na(res[i,2])) res[i,2] <- 0
-		#	res[i,3] <- as.numeric(paste(pair[,i], collapse ="")) # pairs for candidates
+			tmp <- try(survdiff(formula = formula, data = data.tmp, rho = rho), silent = TRUE)
+			if(class(tmp) == "try-error"){
+				res[i,1] <- 0 # pair-wise test statistic
+				res[i,2] <- 1 # pair-wise p-value
+				res[i,3] <- as.numeric(paste(pair[,i], collapse ="")) # pairs for candidates
+			} else {
+				res[i,1] <- tmp$chisq # pair-wise test statistic
+				res[i,2] <- 1 - pchisq(tmp$chisq, 1) # pair-wise p-value
+				res[i,3] <- as.numeric(paste(pair[,i], collapse ="")) # pairs for candidates				
+			}
+		} #else if(splits == "exact"){
+			#class(formula) <- "formula"
+			#tmp = surv_test(formula = formula, data = data.tmp, distribution = exact())
+			#tmp <- maxstat.test(formula= formula, data = data.tmp, smethod="LogRank",
+			#	pmethod="exactGauss",minprop = 0.01, maxprop = .99)
+			#res[i,1] <- tmp$statistic # pair-wise test statistic
+			#res[i,2] <- tmp$p.value # pair-wise p-value
+			#res[i,1] <- tmp@statistic@teststatistic
+			#res[i,2] <- 1 - pchisq(res[i,1], tmp@statistic@df)
+			#if(is.na(res[i,2])) res[i,2] <- 0
+			#res[i,3] <- as.numeric(paste(pair[,i], collapse ="")) # pairs for candidates
 		#}
 	}
 	# Adjsut P-values for Multiple Comparisons 
@@ -45,10 +48,10 @@ pairwise.test <- function(x,  data, formula, rho, adj, splits, shortcut){
 	return(res)
 }
  
-group.sel <- function(x.vec,pt, K, mindat, data, f, minors){
+group.sel <- function(x.vec, pt, K, mindat, data, f, minors){
 	###################################################################
 	## Step 1. finding a set of cut-off points 
-	## 1-1. Calculate minimum test statistics among possible pairs in the candidate s
+	## 1-1. Calculate worst pair test statisic among possible pairs in the candidate s
 	## 1-2. Select a representative candidate pair with the largest test statistics
 	###################################################################
 	### find their groups automatically
@@ -59,25 +62,32 @@ group.sel <- function(x.vec,pt, K, mindat, data, f, minors){
 	cfun <- function(candid, nr, x.vec, mindat,formula){
 		nc <- length(candid)
 		gClass <- matrix(NA, ncol = nc, nrow = nr)
-		gClass <- sapply(candid, function(x,y) y > x, y = x.vec)
+		gClass <- sapply(candid, function(x, x.vec) x.vec > x, x.vec = x.vec)
 		if(is.vector(gClass)) gClass <- t(gClass)
 		where <- apply(gClass, 1, sum)
 		where <- where + 1
 		if(length(unique(where)) != K) return(c(NA,NA,NA))
-		if(all(table(where) > mindat)) {
-			test.tmp <- pairwise.test(where, data, formula, rho = minors@rho, adj = minors@p.adjust.methods, splits = minors@splits, shortcut = minors@shortcut)
+		if(all(table(where) > mindat)){
+			test.tmp <- pairwise.logrank.test(where, data, formula, 
+				rho = minors@rho, 
+				adj = minors@p.adjust.methods, 
+				splits = minors@splits, 
+				shortcut = minors@shortcut)
 			return(test.tmp)
+		} else {
+			return(c(NA,NA,NA))
 		}
-		else return(c(NA,NA,NA))
 	}
 	result <- apply(candid.pt, 2, cfun, nr = nr, x.vec = x.vec, mindat = mindat, formula = f) 
 	if(all(is.na(result))) {
-		cat("You must modify the arguments, K (less than",K,") or mindat (greater than",mindat,"). \n ")
+		cat("You have to modify the arguments, K (less than",K,") or mindat (greater than",mindat,"). \n ")
 		stop("This parameters does not meet the minimum sample rule in the subgroup.")
 	}
 
-	index <- which(result[1,] == max(result[1,],na.rm = TRUE))
-	if(length(index) >=2) index <- index[1]
+	index <- which(result[1,] == max(result[1,], na.rm = TRUE))
+	if(length(index) >= 2) index <- index[1]
+
+	##########################
 	##allocate subgroup vector
 	gClass <- matrix(NA, ncol = K, nrow = nr)
 	gClass <- sapply(candid.pt[,index], function(x,y) y > x, y = x.vec)

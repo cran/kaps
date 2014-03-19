@@ -1,18 +1,18 @@
 \name{print}
 \docType{methods}
 \alias{print}
-\alias{print,apss-method}
-\alias{print,Tree-method}
-\title{Methods for Function \code{print} for the "apss" class. }
+\alias{print,kaps-method}
+\title{Print an object "kaps" with specific information about K}
 \usage{
-\S4method{print}{apss}(x, K)
+\S4method{print}{kaps}(x, K)
 }
-\description{Print simple summary for \code{apss} calss with the specified number of subgroups K}
+\description{
+It functions like \code{show} but the only difference is the output with the specific information about K.}
 \arguments{
-  \item{x}{an object of S4 class \code{apss}.}
+  \item{x}{an object from \code{kaps}}
   \item{K}{a scalar object to determine the number of subgroups K. If missing, the estimated subgroup K is selected.}
 }
 \seealso{
-  \code{\link{kaps}} and \code{\linkS4class{apss}} class
+  \code{\link{kaps}}
 }
 \keyword{methods}
