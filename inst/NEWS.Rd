@@ -1,11 +1,18 @@
-\newcommand{\PR}{\Sexpr[results=rd]{tools:::Rd_expr_PR(#1)}}
+%% kaps Version History
 
 \name{NEWS}
 \title{kaps News}
 \encoding{UTF-8}
 
 % ---------------------------------------------------------------------------- %
-\section{Changes in version 1.0.0 2014-03-19}{
+\section{Changes in version 1.0.2 2014-03-17}{
+  \itemize{
+    \item Imrpove man pages 
+    }
+}
+
+% ---------------------------------------------------------------------------- %
+\section{Changes in version 1.0.0 2014-03-17}{
   \itemize{
     \item Release an official version
     }
@@ -23,7 +30,7 @@
 % ---------------------------------------------------------------------------- %
 \section{Changes in version 0.9.25 2013-11-20}{
   \itemize{
-    \item Add correction methods for simple permuting kaps
+    \item Add correction methods for simple permuting kaps()
     }
 }
 

@@ -1,14 +1,15 @@
 \name{toy}
 \alias{toy}
+\docType{data}
 \title{toy example}
 \description{
-    This is an toy example similar to SEER dataset.
+    toy dataset 
 }
-\arguments{
-  \item{meta}{the number of metastatic lymph nodes}
-  \item{exam}{the number of examined lymph nodes}
+\usage{data(toy)}
+\value{
+  \item{meta}{covariate variable that describes the number of metastatic lymph nodes}
   \item{status}{censoring status}
-  \item{time}{ time to event}
+  \item{time}{time to event}
 }
 
 \keyword{datasets}

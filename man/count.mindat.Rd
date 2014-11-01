@@ -2,7 +2,7 @@
 \alias{count.mindat}
 \title{Caculate the minimum sample size when the number of subgroups is given}
 \description{
-   This function caculates the minimum sample size when the number of subgroups is given. 
+   This function caculates the minimum sample size of each partition when the number of subgroups is given. 
 }
 \usage{
 	count.mindat(formula, data, part = 10)

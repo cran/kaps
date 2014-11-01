@@ -115,6 +115,9 @@ kaps.perm <- function(fit, newdata, permute = TRUE){
 		return(res.perm)
 	} else{
 		Ku = fit@groups
+		Kul <- length(Ku)
+
+
 		formula = fit@formula
 		minors = fit@Options
 		
@@ -138,8 +141,8 @@ kaps.perm <- function(fit, newdata, permute = TRUE){
 			#tmp <- clinfun::permlogrank(formula1, dat.perm)
 			#perm.over.stat <- statistic(tmp)
 			perm.over.pval <- switch(minors@correct,
-								Bf = pvalue(tmp) * Ku * (Ku-1) * 0.5,
-								Adj.Bf = pvalue(tmp) * (Ku-1),
+								Bf = pvalue(tmp) * Kul * (Kul-1) * 0.5,
+								Adj.Bf = pvalue(tmp) * Kul,
 								None = pvalue(tmp)
 							)
 			perm.over.pval <- ifelse(perm.over.pval > 1, 1, perm.over.pval)
@@ -150,8 +153,8 @@ kaps.perm <- function(fit, newdata, permute = TRUE){
 			tmp <- survdiff(formula = formula, data = dat.perm, rho = minors@rho)
 			perm.over.pval <- 1 - pchisq(tmp$chisq, df = Ku - 1)
 			perm.over.pval <- switch(minors@correct,
-								Bf = perm.over.pval * Ku * (Ku-1) * 0.5,
-								Adj.Bf = perm.over.pval * (Ku-1),
+								Bf = perm.over.pval * Kul * (Kul-1) * 0.5,
+								Adj.Bf = perm.over.pval * Kul,
 								None = perm.over.pval
 							)
 			perm.over.pval <- ifelse(perm.over.pval > 1, 1, perm.over.pval)
@@ -159,8 +162,8 @@ kaps.perm <- function(fit, newdata, permute = TRUE){
 
 		
 		# 2. pairwise permutation test statistic
-		pair = combn(Ku, 2)
-		#pair = combat(Ku, 2)
+		#pair = combn(Ku, 2)
+		pair = combnat(Ku, 2)
 		if(minors@shortcut) pair <- pair[, !duplicated(pair[1,]), drop = FALSE]
 
 		for(i in 1:ncol(pair)){
@@ -185,8 +188,8 @@ kaps.perm <- function(fit, newdata, permute = TRUE){
 				if(class(tmp) != "try-error"){
 					perm.pair.stat <- c(perm.pair.stat, statistic(tmp))
 					pair.pval <- switch(minors@correct,
-								Bf = pvalue(tmp) * Ku * (Ku-1) * 0.5,
-								Adj.Bf = pvalue(tmp) * (Ku-1),
+								Bf = pvalue(tmp) * Kul * (Kul-1) * 0.5,
+								Adj.Bf = pvalue(tmp) * Kul,
 								None = pvalue(tmp)
 							)
 					perm.pair.pval <- c(perm.pair.pval, pair.pval)
@@ -198,8 +201,8 @@ kaps.perm <- function(fit, newdata, permute = TRUE){
 					perm.pair.stat <- c(perm.pair.stat, tmp$chisq)
 					pair.pval <- 1 - pchisq(tmp$chisq, 1)
 					pair.pval <- switch(minors@correct,
-								Bf = pair.pval * Ku * (Ku-1) * 0.5,
-								Adj.Bf = pair.pval * (Ku-1),
+								Bf = pair.pval * Kul * (Kul-1) * 0.5,
+								Adj.Bf = pair.pval * Kul,
 								None = pair.pval
 							)
 					perm.pair.pval <- c(perm.pair.pval, pair.pval)

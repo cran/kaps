@@ -1,9 +1,8 @@
 \name{km.curve}
-\docType{methods}
 \alias{km.curve}
 \title{Plot Kaplan-Meire survival curves}
 \description{
-    Plot the Kaplan-Meire survival curves for terminal nodes or selected subgroups on a grapic device.
+    Plot a Kaplan-Meire survival curve for terminal nodes or selected subgroups.
 }
 \usage{
 	km.curve(object, 
@@ -18,7 +17,7 @@
 }
 
 \details{
-  This function provides Kaplan-Meire survival curves with the estimated subgroups  by \code{\link{kaps}}. 
+  This function provides Kaplan-Meire survival curves with the estimated subgroups by \code{\link{kaps}}. 
 }
 \seealso{
 	\code{\link{kaps}}

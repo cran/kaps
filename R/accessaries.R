@@ -1,3 +1,8 @@
+kapsNews <- function(){
+	file.locate <- file.path(system.file(package = "kaps/inst"), "NEWS")
+	file.show(file.locate)
+}
+
 ### Combined probability test 
 Stouffer.test <- function(p, w) { # p is a vector of p-values
   if (missing(w)) {
@@ -306,72 +311,66 @@ setMethod("show", "kaps", function(object){
 ### panel function for Kaplan-Meier curves in nodes
 ## A standard tree plot with KM curves at the terminal nodes
 ## Soo-Heang Eo
-#setGeneric("plot")
-setGeneric("plot", function(x, y, ...)
-		standardGeneric("plot"))
+setGeneric("plot")
+setMethod("plot",signature(x = "kaps", y = "missing"), 
+	function(x, y = NA, K, ...){
+		require(locfit)
+		if(!missing(K)){
+			# stopping rule 1
+			# the range of K
+			if(!(K %in% x@groups)) stop("Check the range of K in the fitted model. It does not match 'K' in the plot()")
 
-plot.kaps <- function(x, K, ...) {
-	require(locfit)
-	if(!missing(K)){
-		# stopping rule 1
-		# the range of K
-		if(!(K %in% x@groups)) stop("Check the range of K in the fitted model. It does not match 'K' in the plot()")
+			x <- x@results[[which(x@groups == K)]]
+			km.curve(x)
+			legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
+				bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
+			return(invisible(x))
+		} else{
 
-		x <- x@results[[which(x@groups == K)]]
+			K <- x@groups[x@index]
+		}
+
+		if(length(x@groups) == 1){
+			x <- x@results[[1]]
+			km.curve(x)
+			legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
+				bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
+			return(invisible(x))
+		}
+
+		fvars <- all.vars(x@formula)
+		par(mfrow = c(2,2))
+		
+		plot(x@data[,fvars[3]], x@data[,fvars[1]], pch = c(1,3)[x@data[,fvars[2]]+1] , 
+			axes=FALSE, col= ifelse(x@data[,fvars[2]] == 1, "red2","blue"), xlab="", ylab="")
+		mtext(fvars[3], side=1, line=3, cex=1.2)
+		mtext("Survival months", side=2, line=2, cex=1.2)
+		axis(1)
+		axis(2, at= c(12,24,48,72,96,120, 144, 168, 192, 216, 240), labels=c(12,24,48,72,96,120, 144, 168, 192, 216, 240))
+		legend("topright",c("Event","Censored"), col=c("blue","red2"), cex=1, pch=c(1,3), bty = "n")
+		r <- locfit.censor(x = x@data[,fvars[3]], y = x@data[,fvars[1]], cens= (1-x@data[,fvars[2]])) 
+		lines(r, lwd=2, lty=1)
+		
 		km.curve(x)
 		legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
 			bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
-		return(invisible(x))
-	} else{
 
-		K <- x@groups[x@index]
+		plot(x@test.stat[1,], type = "b", col = "blue", xlab = "", ylab = "",axes = FALSE, ylim = c(0,max(x@test.stat[2,])),...)
+		mtext("K", side=1, line=3, cex=1.2)
+		mtext(substitute(paste(italic(p),"-values of ", X[k])), side = 2, line = 2, cex = 1.2)
+		abline(h = 0.05, col = "gray", lty = 2)
+		axis(side = 1, at = 1:ncol(x@test.stat), labels =  x@groups)
+		axis(side = 2)
+
+		plot(x@test.stat[2,], type = "b", col = colors()[630], xlab = "", ylab = "", ylim = c(0,ceiling(max(x@test.stat[2,]))), axes = FALSE,...)
+		mtext("K", side=1, line=3, cex=1.2)
+		mtext(substitute(paste(italic(p),"-values of ", X[1])), side = 2, line = 2, cex = 1.2)
+		abline(h = 0.05, col = "gray", lty = 2)
+		axis(side = 1, at = 1:ncol(x@test.stat), labels =  x@groups)
+		axis(side = 2)
 	}
+)
 
-	if(length(x@groups) == 1){
-		x <- x@results[[1]]
-		km.curve(x)
-		legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
-			bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
-		return(invisible(x))
-	}
-
-	fvars <- all.vars(x@formula)
-	par(mfrow = c(2,2))
-	
-	plot(x@data[,fvars[3]], x@data[,fvars[1]], pch = c(1,3)[x@data[,fvars[2]]+1] , 
-		axes=FALSE, col= ifelse(x@data[,fvars[2]] == 1, "red2","blue"), xlab="", ylab="")
-	mtext(fvars[3], side=1, line=3, cex=1.2)
-	mtext("Survival months", side=2, line=2, cex=1.2)
-	axis(1)
-	axis(2, at= c(12,24,48,72,96,120, 144, 168, 192, 216, 240), labels=c(12,24,48,72,96,120, 144, 168, 192, 216, 240))
-	legend("topright",c("Event","Censored"), col=c("blue","red2"), cex=1, pch=c(1,3), bty = "n")
-	r <- locfit.censor(x = x@data[,fvars[3]], y = x@data[,fvars[1]], cens= (1-x@data[,fvars[2]])) 
-	lines(r, lwd=2, lty=1)
-	
-	km.curve(x)
-	legend("topright", legend = paste("G", 1:(length(x@split.pt)+1),sep = ""), 
-		bty = "n", col = unique(x@groupID), lty = unique(x@groupID))
-
-	plot(x@test.stat[1,], type = "b", col = "blue", xlab = "", ylab = "",axes = FALSE, ylim = c(0,max(x@test.stat[2,])),...)
-	mtext("K", side=1, line=3, cex=1.2)
-	mtext(substitute(paste(italic(p),"-values of ", X[k])), side = 2, line = 2, cex = 1.2)
-	abline(h = 0.05, col = "gray", lty = 2)
-	axis(side = 1, at = 1:ncol(x@test.stat), labels =  x@groups)
-	axis(side = 2)
-
-	plot(x@test.stat[2,], type = "b", col = colors()[630], xlab = "", ylab = "", ylim = c(0,ceiling(max(x@test.stat[2,]))), axes = FALSE,...)
-	mtext("K", side=1, line=3, cex=1.2)
-	mtext(substitute(paste(italic(p),"-values of ", X[1])), side = 2, line = 2, cex = 1.2)
-	abline(h = 0.05, col = "gray", lty = 2)
-	axis(side = 1, at = 1:ncol(x@test.stat), labels =  x@groups)
-	axis(side = 2)
-}
-
-setMethod("plot", signature(x = "kaps", y = "missing"), 
-	function(x,y,...) plot.kaps(x, y,...))
-
-
-#####################################################################
 ## plot Kaplan-Meire survival curves for termninal nodes
 km.curve <- function(object, 
 	x.lab = c(0,24,48,72,96,120, 144, 168, 192, 216, 240), lwd = 1.5, ...){

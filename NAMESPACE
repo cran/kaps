@@ -1,13 +1,11 @@
-useDynLib("kaps")
-
-## base packages
 importFrom("graphics", plot)
-importFrom("methods", show)
+
+import("methods")
 import("Formula")
 import("survival")
 import("coin")
 
-export(kaps.control, kaps, count.mindat, km.curve)
+export(kaps.control, kaps, kapsNews, count.mindat, km.curve)
 
 exportClasses(kaps)
 exportMethods(show, print, plot, predict, summary) 

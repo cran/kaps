@@ -1,6 +1,6 @@
 \name{kaps}
 \alias{kaps}
-\title{K-adaptive partitioning for survival data}
+\title{K-adaptive partitioing for survival data}
 \description{
     Conduct \emph{K}-adaptive partitioning algorithm for survival data
 }
@@ -8,13 +8,11 @@
 	kaps(formula, data, K = 2:4, mindat, type = c("perm", "NULL"), ...)
 }
 \arguments{
-  \item{formula}{a Formula object with a response on the left hand side of the '~' operator, and the covariate terms on the right side. The response has to be a survival object with survival time and censoring status in the \link[survival:Surv]{Surv} function. For more details, see \link[Formula:Formula]{Formula} page. }
-  \item{data}{a data frame with variables used in formula. It needs at least three variables including survival time, censoring status, and a covariate. Multivariate covariates can be supported with "+" sign.}
-  \item{K}{
-    the number of subgroups used in the model fitting. The default value is 2:4 which means finding optimal subgroups ranging from 2 to 4. 
+  \item{formula}{Formula object with a response on the left hand side of the '~' operator, and the covariate terms on the right side. The response has to be a survival object with survival time and censoring status in the \link[survival:Surv]{Surv} function. For more details, see \link[Formula:Formula]{Formula} page. }
+  \item{data}{data frame with variables used in formula. It needs at least three variables including survival time, censoring status, and a covariate. Multivariate covariates can be supported with "+" sign.}
+  \item{K}{number of subgroups used in the model fitting. The default value is 2:4 which means finding optimal subgroups ranging from 2 to 4. 
   }
-  \item{type}{
-    Select a type of algorithm in order to find optimal number of subgroups. Two options are provided: \code{perm} and \code{NULL}. The \code{perm} chooses subgroups using permutation procudures, while the \code{NULL} passes a optimal selection algorithm.
+  \item{type}{Select a type of algorithm in order to find optimal number of subgroups. Two options are provided: \code{perm} and \code{NULL}. The \code{perm} chooses subgroups using permutation procudures, while the \code{NULL} passes a optimal selection algorithm.
   }
   \item{mindat}{
     the minimum number of observations at each subgroup. The default value is 5\% of observations.
@@ -43,7 +41,7 @@
     \item{\code{over.stat.sample}:}{adjusted overall test statistic by Bootstrapping}
     \item{\code{pair.stat.sample}:}{adjusted worst-pair test statistic by Bootstrapping}
     \item{\code{groups}:}{candidate K used in the argument}
-    \item{\code{results}:}{a list of results about each K}
+    \item{\code{results}:}{list object about the results of each candidate K}
     \item{\code{Options}:}{tuning parameters}
 }
 \author{
@@ -52,7 +50,7 @@
     HyungJun Cho \email{hj4cho@korea.ac.kr} \cr
 }
 \references{
-SH Eo, S-M Hong and H Cho (2014). K-adaptive partitioning for survival data, \emph{submitted}.
+S-H Eo, S-M Hong and H Cho (2014). K-adaptive partitioning for survival data, \emph{submitted}.
 }
 \seealso{
 	 \code{\link{show}}, \code{\link{plot}}, \code{\link{predict}}, \code{\link{print}} and \code{\link{summary}} for the convenient use of kaps() \cr

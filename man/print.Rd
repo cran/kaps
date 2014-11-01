@@ -1,6 +1,5 @@
 \name{print}
 \docType{methods}
-\alias{print}
 \alias{print,kaps-method}
 \title{Print an object "kaps" with specific information about K}
 \usage{
